@@ -1,4 +1,4 @@
-const CACHE_NAME = 'anti-growup-pwa-v1';
+const CACHE_NAME = 'anti-growup-pwa-v2';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
