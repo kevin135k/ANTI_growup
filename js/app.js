@@ -332,15 +332,10 @@ function recalculateAll() {
     hcCard.style.display = 'none';
   }
 
-  // 4. Render SVG Growth Curve
-  $('growthChartContainer').innerHTML = renderGrowthChartSVG({
-    sex: state.sex,
-    metric: state.chartMetric,
-    ageYears: effectiveAge,
-    value: state.chartMetric === 'h' ? state.heightCm : state.weightKg,
-    projectedAdult: projectedH?.projected ?? null,
-    targetHeight: targetH
-  });
+  // 4. Update persistent Drawer Summary & Render Growth Charts (Wide Banner + Fullscreen)
+  state._lastCalc = { effectiveAge, hEval, wEval, bmiEval, hcEval, targetH, projectedH, boneAgePred };
+  renderDrawerSummary();
+  renderCharts();
 
   // 5. Auto-sync Dev Band & Secondary Tabs if active
   if (effectiveAge !== null) {
@@ -356,9 +351,107 @@ function recalculateAll() {
   if (state.activeTab === 'dev-screen') renderDevScreening();
   if (state.activeTab === 'ref-tables') renderReferenceTable();
   if (state.activeTab === 'quick-ref') renderQuickReference();
+}
 
-  // Save latest calculation snapshot for copy summary
-  state._lastCalc = { effectiveAge, hEval, wEval, bmiEval, hcEval, targetH, projectedH, boneAgePred };
+function renderDrawerSummary() {
+  const sexLabel = state.sex === 'boy' ? '男孩' : '女孩';
+  $('drawerSumSex').textContent = sexLabel;
+  if (state.birthdayParsed && state.ageInfo && !state.ageInfo.error) {
+    $('drawerSumDob').textContent = state.birthdayParsed.displayAD;
+    $('drawerSumAge').textContent = state.ageInfo.corrected
+      ? `${state.ageInfo.label}（矯正 ${state.ageInfo.corrected.label}）`
+      : state.ageInfo.label;
+  } else {
+    $('drawerSumDob').textContent = '--';
+    $('drawerSumAge').textContent = '尚未輸入生日';
+  }
+  $('drawerSumHeight').textContent = Number.isFinite(state.heightCm)
+    ? `${state.heightCm.toFixed(1)} cm`
+    : '--';
+  $('drawerSumWeight').textContent = Number.isFinite(state.weightKg)
+    ? `${state.weightKg.toFixed(1)} kg`
+    : '--';
+}
+
+function renderCharts() {
+  const c = state._lastCalc || {};
+  const isLandscapeOrWide = window.innerWidth >= 700;
+  const baseParams = {
+    sex: state.sex,
+    metric: state.chartMetric,
+    ageYears: c.effectiveAge ?? null,
+    value: state.chartMetric === 'h' ? state.heightCm : state.weightKg,
+    projectedAdult: c.projectedH?.projected ?? null,
+    targetHeight: c.targetH ?? null
+  };
+
+  // Wide bottom banner chart
+  $('growthChartContainer').innerHTML = renderGrowthChartSVG({
+    ...baseParams,
+    width: isLandscapeOrWide ? 940 : 680,
+    height: isLandscapeOrWide ? 360 : 370
+  });
+
+  // Fullscreen modal chart (auto-adapts to portrait/landscape screen size)
+  if (state.isChartFullscreen) {
+    const fsBox = $('fullscreenChartContainer');
+    const rect = fsBox.getBoundingClientRect();
+    const boxW = Math.max(360, rect.width || window.innerWidth);
+    const boxH = Math.max(240, rect.height || window.innerHeight - 110);
+    const aspect = boxW / boxH;
+    // Pick clean logical viewBox scaled to actual viewport aspect ratio
+    const svgW = aspect >= 1 ? Math.round(Math.min(1100, Math.max(760, boxW))) : Math.round(Math.max(540, boxW * 1.25));
+    const svgH = Math.round(svgW / Math.max(0.75, Math.min(2.6, aspect)));
+
+    fsBox.innerHTML = renderGrowthChartSVG({
+      ...baseParams,
+      width: svgW,
+      height: svgH
+    });
+
+    const sexLabel = state.sex === 'boy' ? '男孩' : '女孩';
+    const metricLabel = state.chartMetric === 'h' ? '身高曲線' : '體重曲線';
+    $('fsChartTitle').textContent = `台灣${sexLabel}${metricLabel}`;
+
+    const metaParts = [];
+    if (state.ageInfo && !state.ageInfo.error) metaParts.push(state.ageInfo.label);
+    if (state.chartMetric === 'h' && state.heightCm) {
+      const prTxt = c.hEval ? `（PR ${c.hEval.percentile.toFixed(1)}）` : '';
+      metaParts.push(`${state.heightCm} cm${prTxt}`);
+    } else if (state.chartMetric === 'w' && state.weightKg) {
+      const prTxt = c.wEval ? `（PR ${c.wEval.percentile.toFixed(1)}）` : '';
+      metaParts.push(`${state.weightKg} kg${prTxt}`);
+    }
+    $('fsChartMeta').textContent = metaParts.join(' ｜ ');
+  }
+}
+
+function openChartFullscreen() {
+  state.isChartFullscreen = true;
+  const modal = $('chartFullscreenModal');
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('fs-open');
+
+  // Attempt native Fullscreen API where supported (Android/Desktop); CSS modal handles iOS Safari seamlessly
+  if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+  requestAnimationFrame(() => renderCharts());
+}
+
+function closeChartFullscreen() {
+  if (!state.isChartFullscreen) return;
+  state.isChartFullscreen = false;
+  const modal = $('chartFullscreenModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('fs-open');
+
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
+  requestAnimationFrame(() => renderCharts());
 }
 
 function renderMetricCard({ evalObj, valId, metaId, badgeId, dotId, unit, emptyText }) {
@@ -737,7 +830,13 @@ function bindEvents() {
   $('menuCloseBtn').addEventListener('click', closeDrawer);
   $('drawerBackdrop').addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeDrawer();
+    if (e.key === 'Escape') {
+      if (state.isChartFullscreen) {
+        closeChartFullscreen();
+      } else {
+        closeDrawer();
+      }
+    }
   });
 
   // Quick +- UI Scale
@@ -831,15 +930,34 @@ function bindEvents() {
     $('advancedToggleIcon').textContent = isOpen ? '−' : '＋';
   });
 
-  // Chart metric toggle (Height / Weight)
+  // Chart metric toggle (Height / Weight — synced across banner & fullscreen modal)
   document.querySelectorAll('.chart-tab').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.chartMetric = btn.dataset.chartMetric;
       document.querySelectorAll('.chart-tab').forEach((b) =>
-        b.classList.toggle('active', b === btn)
+        b.classList.toggle('active', b.dataset.chartMetric === state.chartMetric)
       );
-      recalculateAll();
+      renderCharts();
     });
+  });
+
+  // Fullscreen growth chart open / close & auto orientation reflow
+  $('chartFullscreenBtn').addEventListener('click', openChartFullscreen);
+  $('chartFullscreenCloseBtn').addEventListener('click', closeChartFullscreen);
+
+  let resizeTimer = null;
+  const handleViewportChange = () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => renderCharts(), 80);
+  };
+  window.addEventListener('resize', handleViewportChange);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => renderCharts(), 180);
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (state.isChartFullscreen) {
+      setTimeout(() => renderCharts(), 100);
+    }
   });
 
   // SGA Tab
