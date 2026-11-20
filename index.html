@@ -43,24 +43,31 @@
   <aside id="appDrawer" class="drawer" aria-label="主選單">
     <div class="drawer-header">
       <div class="drawer-brand">
-        <span>長春</span>
         <span>兒童生長評估工具</span>
       </div>
       <button id="menuCloseBtn" class="drawer-close" type="button" aria-label="關閉選單">✕</button>
     </div>
 
-    <!-- Quick +- UI Scale Control for iPhone / iPad -->
-    <section class="scale-panel" aria-label="介面大小快速設定">
-      <div class="scale-panel-title">
-        <span>介面與字體大小</span>
-        <span id="scaleLabel" class="scale-badge num">100%</span>
+    <!-- Persistent Current Patient Summary at Top of Drawer -->
+    <section id="drawerPatientSummary" class="drawer-summary" aria-label="目前輸入資料摘要">
+      <div class="drawer-summary-row">
+        <span class="drawer-summary-tag" id="drawerSumSex">女孩</span>
+        <span class="drawer-summary-age num" id="drawerSumAge">尚未輸入生日</span>
       </div>
-      <div class="scale-controls">
-        <button id="scaleDownBtn" class="scale-btn" type="button" aria-label="縮小介面">− 縮小</button>
-        <button id="scaleResetBtn" class="scale-reset" type="button">標準</button>
-        <button id="scaleUpBtn" class="scale-btn" type="button" aria-label="放大介面">+ 放大</button>
+      <div class="drawer-summary-grid num">
+        <div class="drawer-summary-cell">
+          <small>生日</small>
+          <strong id="drawerSumDob">--</strong>
+        </div>
+        <div class="drawer-summary-cell">
+          <small>身高</small>
+          <strong id="drawerSumHeight">--</strong>
+        </div>
+        <div class="drawer-summary-cell">
+          <small>體重</small>
+          <strong id="drawerSumWeight">--</strong>
+        </div>
       </div>
-      <p class="scale-hint">自動記憶設定，方便 iPhone 單手操作或 iPad 診間向家長說明。</p>
     </section>
 
     <nav class="drawer-nav" aria-label="功能分頁">
@@ -102,9 +109,22 @@
     </nav>
 
     <div class="drawer-footer">
-      資料依據：國健署新版 WHO 0–5 歲標準、陳偉德與張美惠醫師 2010 年台灣研究、衛福部 BMI 建議值。<br />
-      僅供臨床與衛教輔助參考。
+      資料依據：國健署新版 WHO 0–5 歲標準、陳偉德與張美惠醫師 2010 年台灣研究、衛福部 BMI 建議值。
     </div>
+
+    <!-- Quick +- UI Scale Control at Bottom of Hamburger Drawer -->
+    <section class="scale-panel" aria-label="介面大小快速設定">
+      <div class="scale-panel-title">
+        <span>介面與字體大小</span>
+        <span id="scaleLabel" class="scale-badge num">100%</span>
+      </div>
+      <div class="scale-controls">
+        <button id="scaleDownBtn" class="scale-btn" type="button" aria-label="縮小介面">− 縮小</button>
+        <button id="scaleResetBtn" class="scale-reset" type="button">標準</button>
+        <button id="scaleUpBtn" class="scale-btn" type="button" aria-label="放大介面">+ 放大</button>
+      </div>
+      <p class="scale-hint">自動記憶設定，方便 iPhone 單手操作或 iPad 診間說明。</p>
+    </section>
   </aside>
 
   <!-- Main Workspace -->
@@ -326,22 +346,34 @@
             </div>
           </div>
 
-          <!-- Interactive SVG Growth Curve -->
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">台灣兒童生長曲線圖</h3>
-              <div class="chart-tabs" role="tablist">
-                <button type="button" class="chart-tab active" data-chart-metric="h">身高曲線</button>
-                <button type="button" class="chart-tab" data-chart-metric="w">體重曲線</button>
-              </div>
+        </div>
+      </div>
+
+      <!-- Full-Width Bottom Banner: Interactive SVG Growth Curve -->
+      <div id="growthChartCard" class="card chart-card-full">
+        <div class="card-header chart-card-header">
+          <h3 class="card-title">台灣兒童生長曲線圖</h3>
+          <div class="chart-header-actions">
+            <div class="chart-tabs" role="tablist">
+              <button type="button" class="chart-tab active" data-chart-metric="h">身高曲線</button>
+              <button type="button" class="chart-tab" data-chart-metric="w">體重曲線</button>
             </div>
-            <div id="growthChartContainer" class="chart-container"></div>
-            <div class="chart-legend">
-              <span><i class="legend-dot" style="background:var(--accent);"></i>目前量測點</span>
-              <span><i class="legend-dot" style="background:#FFFFFF;border:2px solid var(--accent);"></i>18 歲曲線推估</span>
-              <span><i class="legend-dot" style="background:#6E8B74;"></i>遺傳目標區間 (±5 cm) & P50 中位數</span>
-            </div>
+            <button id="chartFullscreenBtn" class="btn-fullscreen" type="button" title="放大全螢幕檢視曲線" aria-label="放大全螢幕檢視曲線">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+              <span>全螢幕</span>
+            </button>
           </div>
+        </div>
+        <div id="growthChartContainer" class="chart-container"></div>
+        <div class="chart-legend">
+          <span><i class="legend-dot" style="background:var(--accent);"></i>目前量測點</span>
+          <span><i class="legend-dot" style="background:#FFFFFF;border:2px solid var(--accent);"></i>18 歲曲線推估</span>
+          <span><i class="legend-dot" style="background:#6E8B74;"></i>遺傳目標區間 (±5 cm) & P50 中位數</span>
         </div>
       </div>
 
@@ -451,6 +483,37 @@
       <div id="quickRefGrid" class="ref-cards-grid"></div>
     </section>
   </main>
+
+  <!-- Fullscreen Growth Chart Modal (Safe-Area & Auto-Orientation Aware) -->
+  <div id="chartFullscreenModal" class="chart-fullscreen-modal" role="dialog" aria-modal="true" aria-label="全螢幕兒童生長曲線圖" aria-hidden="true">
+    <div class="fs-header">
+      <div class="fs-title-group">
+        <strong id="fsChartTitle">台灣兒童生長曲線圖</strong>
+        <span id="fsChartMeta" class="fs-meta num"></span>
+      </div>
+      <div class="fs-actions">
+        <div class="chart-tabs" role="tablist">
+          <button type="button" class="chart-tab active" data-chart-metric="h">身高曲線</button>
+          <button type="button" class="chart-tab" data-chart-metric="w">體重曲線</button>
+        </div>
+        <button id="chartFullscreenCloseBtn" class="btn-fullscreen-close" type="button" aria-label="關閉全螢幕">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 14 10 14 10 20"></polyline>
+            <polyline points="20 10 14 10 14 4"></polyline>
+            <line x1="14" y1="10" x2="21" y2="3"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+          <span>關閉</span>
+        </button>
+      </div>
+    </div>
+    <div id="fullscreenChartContainer" class="fs-chart-body"></div>
+    <div class="chart-legend fs-legend">
+      <span><i class="legend-dot" style="background:var(--accent);"></i>目前量測點</span>
+      <span><i class="legend-dot" style="background:#FFFFFF;border:2px solid var(--accent);"></i>18 歲曲線推估</span>
+      <span><i class="legend-dot" style="background:#6E8B74;"></i>遺傳目標區間 (±5 cm) & P50 中位數</span>
+    </div>
+  </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
