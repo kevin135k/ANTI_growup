@@ -106,6 +106,20 @@
           <small>睡眠時間、熱量、發牙時程與生命徵候</small>
         </span>
       </button>
+      <button class="nav-item" type="button" data-tab="tcm-notes">
+        <span class="nav-icon">🌿</span>
+        <span class="nav-label">
+          <strong>中藥用藥輔助摘要</strong>
+          <small>轉骨藥材、體質分型、骨齡策略與經驗方</small>
+        </span>
+      </button>
+      <button class="nav-item" type="button" data-tab="chart-gallery">
+        <span class="nav-icon">🖼️</span>
+        <span class="nav-label">
+          <strong>圖表圖片一覽</strong>
+          <small>青春期發育時程圖與男女生長速度曲線</small>
+        </span>
+      </button>
     </nav>
 
     <div class="drawer-footer">
@@ -265,13 +279,29 @@
                 </div>
                 <div>
                   <div class="form-label-row">
-                    <label class="form-label" for="pretermGA">出生週數</label>
+                    <label class="form-label" for="pretermGA">懷孕週數</label>
                   </div>
                   <div class="input-wrap">
-                    <input id="pretermGA" class="text-input has-unit num" type="number" inputmode="numeric" min="22" max="42" placeholder="足月免填" />
+                    <input id="pretermGA" class="text-input has-unit num" type="number" inputmode="numeric" min="22" max="42" placeholder="24–42" />
                     <span class="input-unit">週</span>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="mainBirthWeight">出生體重（判讀 SGA / LGA）</label>
+                <span class="form-hint">同步新生兒胎齡頁</span>
+              </div>
+              <div class="input-row-2">
+                <div class="input-wrap">
+                  <input id="mainBirthWeight" class="text-input has-unit num" type="number" inputmode="numeric" min="300" max="6000" placeholder="例：3100" />
+                  <span class="input-unit">g</span>
+                </div>
+                <select id="mainPlurality" class="text-input" aria-label="單胞胎或雙胞胎">
+                  <option value="singleton">單胞胎</option>
+                  <option value="twin">雙胞胎</option>
+                </select>
               </div>
             </div>
           </div>
@@ -283,7 +313,7 @@
           <div class="hero-prediction">
             <div class="hero-top">
               <h2 class="hero-title">成年預測身高評估</h2>
-              <span class="section-tag" id="predictionBadge">即時計算</span>
+              <span class="section-tag" id="predictionBadge">北榮常模基準</span>
             </div>
             <div id="predictionContent" class="prediction-cards">
               <div class="pred-box">
@@ -297,7 +327,7 @@
                 <div class="pred-sub" id="projectedHeightSub">請輸入生日與目前身高</div>
               </div>
               <div class="pred-box full-span" id="boneAgeResultBox" style="display: none;">
-                <div class="pred-label">骨齡預測成年身高（Bayley-Pinneau／骨齡軌道）</div>
+                <div class="pred-label">骨齡預測成年身高（台灣骨齡軌道／Bayley-Pinneau 對照）</div>
                 <div class="pred-value num" id="boneAgePredVal">--<span class="pred-unit">cm</span></div>
                 <div class="pred-sub" id="boneAgePredSub"></div>
               </div>
@@ -343,6 +373,15 @@
               </div>
               <div class="metric-main num" id="hcPRVal">--</div>
               <div class="metric-meta num" id="hcMeta">WHO 0–5 歲標準</div>
+            </div>
+
+            <div class="metric-card" id="sgaMetricCard" style="display:none;">
+              <div class="metric-head">
+                <span>出生體重胎齡評估</span>
+                <span id="mainSgaBadge" class="badge normal" style="display:none;"></span>
+              </div>
+              <div class="metric-main num" id="mainSgaVal">--</div>
+              <div class="metric-meta num" id="mainSgaMeta">台灣單雙胞胎標準</div>
             </div>
           </div>
 
@@ -482,6 +521,234 @@
       </div>
       <div id="quickRefGrid" class="ref-cards-grid"></div>
     </section>
+
+    <!-- TAB 6: 中藥用藥輔助摘要（個人門診筆記節錄） -->
+    <section id="tab-tcm-notes" class="tab-panel">
+      <div class="page-header">
+        <h2>中藥用藥輔助摘要</h2>
+        <p>個人臨床筆記節錄整理（僅供醫師門診內部快速查閱參考）。</p>
+      </div>
+
+      <!-- Block 1: 常見轉骨藥材 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">常見轉骨藥材</h3>
+          <span class="section-tag">四大治法分類</span>
+        </div>
+        <div class="tcm-grid-4">
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">健脾補氣</div>
+            <div class="herb-tags">
+              <span>茯苓</span><span>白朮</span><span>黨參</span><span>炙甘草</span><span>黃耆</span><span>山藥</span>
+            </div>
+          </div>
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">滋陰養血</div>
+            <div class="herb-tags">
+              <span>當歸</span><span>川芎</span><span>熟地</span><span>白芍</span><span>紅棗</span>
+            </div>
+          </div>
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">強筋壯骨</div>
+            <div class="herb-tags">
+              <span>杜仲</span><span>續斷</span><span>骨碎補</span><span>巴戟天</span><span>何首烏</span><span>枸杞子</span><span>鹿角</span>
+            </div>
+          </div>
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">行氣活血</div>
+            <div class="herb-tags">
+              <span>柴胡</span><span>木香</span><span>香附</span><span>川七</span><span>九層塔頭</span><span>含殼草</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 2: 體質速記 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">體質分型速記</h3>
+          <span class="section-tag">門診辨證方向</span>
+        </div>
+        <div class="tcm-grid-3">
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">瘦小型</div>
+            <p class="tcm-text">瘦人多火，滋陰降火養血，先養其脾胃，<strong>六味地黃丸</strong>。</p>
+          </div>
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">矮胖型</div>
+            <p class="tcm-text">痰濕型，愛吃甜食、吃飯吃麵，去痰濕的藥、健脾利濕的藥為主，偏屬營養過剩，不太需要補養藥。</p>
+          </div>
+          <div class="tcm-subcard">
+            <div class="tcm-subcard-title">壯小型</div>
+            <p class="tcm-text">最難長高，筋骨架構較緊繃，可能運動過度，理氣活血多給，配合針灸推拿鬆筋，<strong>七厘散、柴胡疏肝散</strong>。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 3: 骨齡追蹤與中西醫合作原則 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">骨齡評估與中西醫整合策略</h3>
+          <span class="section-tag">轉介與共照重點</span>
+        </div>
+        <div class="tcm-callout-stack">
+          <div class="tcm-callout">
+            <strong>老師建議（青春期骨齡控管）</strong>
+            <p>如果已經青春期，盡可能骨齡拉在差距 <strong>1.5 歲以內</strong>，半年追蹤差距是否能再縮，才去轉骨衝一波。</p>
+          </div>
+          <div class="tcm-callout warn">
+            <strong>西醫轉介時機（超前 2 歲以上）</strong>
+            <p>西醫超前 2 歲，幾乎都會打針了。因此還沒青春期、超前 2 年以上，<strong>尤其男生（性早熟機率比較低）</strong>，轉介西醫進一步確認腦袋有沒有長東西。要不要打針給家長與西醫決定。</p>
+          </div>
+          <div class="tcm-callout">
+            <strong>已打針抑制中之治療模式調整</strong>
+            <p>長高是生長激素、雌激素作用。打針抑制中小朋友長得慢、比正常慢。<strong>滋陰清熱</strong>以外，酌加幫助長高：<strong>健脾益氣、活血化瘀</strong>。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 4: 臨床四大證型經驗方與心得 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">臨床四大證型經驗方與心得</h3>
+          <span class="section-tag">四型辨證</span>
+        </div>
+        <div class="tcm-grid-2">
+          <article class="tcm-pattern-card">
+            <h4 class="tcm-pattern-title">一、身材瘦弱型</h4>
+            <div class="tcm-field">
+              <span class="tcm-field-label">症狀</span>
+              <p>此型兒童，純屬身材瘦小，食慾正常、二便通暢、作息正常，除了身高體重外，其他檢查皆無恙。</p>
+            </div>
+            <div class="tcm-field formula">
+              <span class="tcm-field-label">經驗方</span>
+              <p>六味地黃丸、黨參、白朮、黃芪、當歸、牛膝、杜仲、五加皮。</p>
+            </div>
+            <div class="tcm-field">
+              <span class="tcm-field-label">臨床心得</span>
+              <ol class="tcm-list">
+                <li>此型以遺傳因素居多。</li>
+                <li>應視父母親身高，兒童身高百分位優劣建議調理開始的時間。</li>
+                <li>此型若錯過黃金時期，則成效不佳。</li>
+              </ol>
+            </div>
+          </article>
+
+          <article class="tcm-pattern-card">
+            <h4 class="tcm-pattern-title">二、營養不良型</h4>
+            <div class="tcm-field">
+              <span class="tcm-field-label">症狀</span>
+              <p>此型兒童，常食慾不振，有不知飢、少食即飽、多食欲嘔的特徵。偏食是常態，偶然會有便秘，甚至大便溏瀉。一般皆有面色不華的表現。</p>
+            </div>
+            <div class="tcm-field formula">
+              <span class="tcm-field-label">經驗方</span>
+              <p>小柴胡湯、平胃散、神麴、麥芽、骨碎補、桂枝、黃芪。</p>
+            </div>
+            <div class="tcm-field">
+              <span class="tcm-field-label">臨床心得</span>
+              <ol class="tcm-list">
+                <li>此型常從幼兒時期即食慾不振。</li>
+                <li>應了解長輩餵養方式，更了解食物種類以分析建議。</li>
+                <li>經驗方非不變方，若療效不佳應更改處方。</li>
+                <li>食慾欠佳基本上應先攝取全營養食物，再補充其他種類食物。</li>
+              </ol>
+            </div>
+          </article>
+
+          <article class="tcm-pattern-card">
+            <h4 class="tcm-pattern-title">三、矮胖型</h4>
+            <div class="tcm-field">
+              <span class="tcm-field-label">症狀</span>
+              <p>此型兒童，身高不高，肥腴多脂，柔肉不堅，好吃惡動，往往遺傳至父母體格。</p>
+            </div>
+            <div class="tcm-field formula">
+              <span class="tcm-field-label">經驗方</span>
+              <p>補中益氣湯、四逆散、桂枝、牛膝、刺五加、桔梗、茯苓。</p>
+            </div>
+            <div class="tcm-field">
+              <span class="tcm-field-label">臨床心得</span>
+              <ol class="tcm-list">
+                <li>因與家族遺傳有關，所以父母的飲食選擇及運動量往往影響很大。</li>
+                <li>此型兒童偏氣虛、濕盛痰聚，選方以健脾益氣利濕為主，再加旁達四肢引經方藥。</li>
+                <li>禁食肥甘厚膩，鼓勵多運動非常重要。</li>
+              </ol>
+            </div>
+          </article>
+
+          <article class="tcm-pattern-card">
+            <h4 class="tcm-pattern-title">四、矮而精壯型</h4>
+            <div class="tcm-field">
+              <span class="tcm-field-label">症狀</span>
+              <p>此型兒童，常見五短身材，體格粗壯，肌肉結實，骨骼粗大。</p>
+            </div>
+            <div class="tcm-field formula">
+              <span class="tcm-field-label">經驗方</span>
+              <p>柴胡、白芍、桂枝、甘草、當歸、黃芪、牛膝、杜仲、何首烏、骨碎補。</p>
+            </div>
+            <div class="tcm-field">
+              <span class="tcm-field-label">臨床心得</span>
+              <ol class="tcm-list">
+                <li>此型兒童為生長調理最慢者。</li>
+                <li>必須留意骨齡與年齡的差異。</li>
+                <li>天生孔武有力，常喜歡以力量展示自己的優越面，所以成長遲緩，應告誡搬重。</li>
+              </ol>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 7: 圖表圖片一覽（雲端參考資料夾三張臨床圖表） -->
+    <section id="tab-chart-gallery" class="tab-panel">
+      <div class="page-header">
+        <h2>圖表圖片一覽</h2>
+        <p>收錄參考資料夾三張青春期發育與生長速度關鍵臨床參考圖表，點擊任一圖片可放大全螢幕檢視。</p>
+      </div>
+
+      <div class="gallery-grid">
+        <article class="card gallery-card">
+          <div class="card-header">
+            <h3 class="card-title">女生青春期發育時程圖</h3>
+            <span class="section-tag">Mean ± 2.5 SD</span>
+          </div>
+          <button type="button" class="gallery-img-btn" data-lightbox-src="images/puberty-female.png" data-lightbox-title="女生青春期發育時程圖（Mean ± 2.5 SD）">
+            <img src="images/puberty-female.png" alt="Mean age of onset with a range of ±2.5 SDs for several events of female puberty" loading="lazy" />
+            <span class="gallery-zoom-hint">點擊放大全螢幕</span>
+          </button>
+          <p class="gallery-caption">
+            乳房發育（Breast bud）平均 <strong>10.5 歲</strong> → 陰毛初現 <strong>11.0 歲</strong> → 生長高峰（PHV）<strong>11.4 歲</strong> → 初經（Menarche）<strong>12.8 歲</strong>（正常範圍約 8–13 歲啟動）。
+          </p>
+        </article>
+
+        <article class="card gallery-card">
+          <div class="card-header">
+            <h3 class="card-title">男生青春期發育時程圖</h3>
+            <span class="section-tag">Mean ± 2.5 SD</span>
+          </div>
+          <button type="button" class="gallery-img-btn" data-lightbox-src="images/puberty-male.png" data-lightbox-title="男生青春期發育時程圖（Mean ± 2.5 SD）">
+            <img src="images/puberty-male.png" alt="Mean age of onset with a range of ±2.5 SDs for several events of male puberty" loading="lazy" />
+            <span class="gallery-zoom-hint">點擊放大全螢幕</span>
+          </button>
+          <p class="gallery-caption">
+            睪丸體積 &gt; 2 cc 平均 <strong>11.4 歲</strong> → 陰毛初現 <strong>12.0 歲</strong> → 陰莖成長 <strong>12.2 歲</strong> → 生長高峰（PHV）<strong>14.1 歲</strong>（正常範圍約 9–14 歲啟動）。
+          </p>
+        </article>
+
+        <article class="card gallery-card gallery-card-wide">
+          <div class="card-header">
+            <h3 class="card-title">男女生長速度曲線圖（6–18 歲）</h3>
+            <span class="section-tag">Height Gain cm / year</span>
+          </div>
+          <button type="button" class="gallery-img-btn" data-lightbox-src="images/growth-velocity.png" data-lightbox-title="男女生長速度曲線圖（Height Gain, cm per year）">
+            <img src="images/growth-velocity.png" alt="The pattern of growth velocity from birth through 18 years for Girls and Boys" loading="lazy" />
+            <span class="gallery-zoom-hint">點擊放大全螢幕</span>
+          </button>
+          <p class="gallery-caption">
+            青春期前男女每年約長 <strong>5–6 cm</strong>；女生約於 <strong>11.5–12 歲</strong>達生長高峰（約 8.3–8.5 cm/年），男生約晚兩年於 <strong>14 歲</strong>達高峰（約 9.2–9.5 cm/年），之後隨生長板閉合逐年遞減。
+          </p>
+        </article>
+      </div>
+    </section>
   </main>
 
   <!-- Fullscreen Growth Chart Modal (Safe-Area & Auto-Orientation Aware) -->
@@ -512,6 +779,23 @@
       <span><i class="legend-dot" style="background:var(--accent);"></i>目前量測點</span>
       <span><i class="legend-dot" style="background:#FFFFFF;border:2px solid var(--accent);"></i>18 歲曲線推估</span>
       <span><i class="legend-dot" style="background:#6E8B74;"></i>遺傳目標區間 (±5 cm) & P50 中位數</span>
+    </div>
+  </div>
+
+  <!-- Fullscreen Image Lightbox Modal (for Page 7 Gallery Charts) -->
+  <div id="imageLightboxModal" class="chart-fullscreen-modal" role="dialog" aria-modal="true" aria-label="圖表全螢幕檢視" aria-hidden="true">
+    <div class="fs-header">
+      <div class="fs-title-group">
+        <strong id="lightboxTitle">圖表全螢幕檢視</strong>
+      </div>
+      <div class="fs-actions">
+        <button id="imageLightboxCloseBtn" class="btn-fullscreen-close" type="button" aria-label="關閉圖片檢視">
+          <span>✕ 關閉</span>
+        </button>
+      </div>
+    </div>
+    <div class="fs-chart-body lightbox-body">
+      <img id="lightboxImg" src="" alt="" />
     </div>
   </div>
 

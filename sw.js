@@ -1,4 +1,4 @@
-const CACHE_NAME = 'anti-growup-pwa-v2';
+const CACHE_NAME = 'anti-growup-pwa-v3';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,10 @@ const PRECACHE_ASSETS = [
   './js/ui/chartRenderer.js',
   './icons/icon.svg',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './images/puberty-female.png',
+  './images/puberty-male.png',
+  './images/growth-velocity.png'
 ];
 
 self.addEventListener('install', (event) => {

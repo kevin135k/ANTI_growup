@@ -237,16 +237,18 @@ export function zToCurveValue(z, curveValues, zGrid = PERCENTILE_Z) {
 }
 
 /**
- * Format percentile into clinical text & status
+ * Format percentile into clinical text & Taipei VGH 8-band interval
+ * (<3, 3-15, 15-25, 25-50, 50-75, 75-85, 85-97, >97)
  */
 export function classifyPercentile(pr) {
-  if (pr < 3) return { badge: '< PR 3（偏低）', short: '< 3', status: 'warn' };
-  if (pr < 15) return { badge: 'PR 3–15（中下）', short: `${pr.toFixed(0)}`, status: 'caution' };
-  if (pr < 25) return { badge: 'PR 15–25（正常偏低）', short: `${pr.toFixed(0)}`, status: 'normal' };
-  if (pr <= 75) return { badge: 'PR 25–75（正常均標）', short: `${pr.toFixed(0)}`, status: 'normal' };
-  if (pr <= 85) return { badge: 'PR 75–85（正常偏高）', short: `${pr.toFixed(0)}`, status: 'normal' };
-  if (pr <= 97) return { badge: 'PR 85–97（中高）', short: `${pr.toFixed(0)}`, status: 'caution' };
-  return { badge: '> PR 97（偏高）', short: '> 97', status: 'warn' };
+  if (pr < 3) return { badge: '< PR 3（偏低）', band: '< 3', short: '< 3', status: 'warn' };
+  if (pr < 15) return { badge: 'PR 3–15（中下）', band: '3–15', short: `${pr.toFixed(0)}`, status: 'caution' };
+  if (pr < 25) return { badge: 'PR 15–25（正常偏低）', band: '15–25', short: `${pr.toFixed(0)}`, status: 'normal' };
+  if (pr < 50) return { badge: 'PR 25–50（正常中位下）', band: '25–50', short: `${pr.toFixed(0)}`, status: 'normal' };
+  if (pr <= 75) return { badge: 'PR 50–75（正常中位上）', band: '50–75', short: `${pr.toFixed(0)}`, status: 'normal' };
+  if (pr <= 85) return { badge: 'PR 75–85（正常偏高）', band: '75–85', short: `${pr.toFixed(0)}`, status: 'normal' };
+  if (pr <= 97) return { badge: 'PR 85–97（中高）', band: '85–97', short: `${pr.toFixed(0)}`, status: 'caution' };
+  return { badge: '> PR 97（偏高）', band: '> 97', short: '> 97', status: 'warn' };
 }
 
 /**
@@ -345,6 +347,8 @@ export function evaluateBMI(sex, ageYears, heightCm, weightKg) {
 
 /**
  * Genetic Target Height (Mid-Parental Height)
+ * Matches Taipei VGH / Tanner formula:
+ * Boy: (Father + Mother + 13) / 2 ; Girl: (Father + Mother - 13) / 2
  */
 export function calculateTargetHeight(sex, fatherCm, motherCm) {
   if (!Number.isFinite(fatherCm) || !Number.isFinite(motherCm) || fatherCm < 100 || motherCm < 100) {
@@ -379,7 +383,9 @@ export function projectAdultHeight(sex, heightEval) {
 }
 
 /**
- * Predict adult height using Bone Age (Bayley-Pinneau + Taiwan Growth Channel)
+ * Predict adult height using Bone Age
+ * 1. Taiwan Growth Curve Bone-Age Channel Projection (aligns with Taipei VGH standalone bone-age logic & Chen-Chang 2010 adult norms)
+ * 2. Bayley-Pinneau % of Mature Height (Average table for BA >= 6y, shown as international cross-check)
  */
 export function predictHeightByBoneAge(sex, boneAgeYears, examHeightCm, chronoAgeYears = null) {
   if (
@@ -392,7 +398,7 @@ export function predictHeightByBoneAge(sex, boneAgeYears, examHeightCm, chronoAg
     return null;
   }
 
-  // 1. Curve projection using bone age as effective age
+  // 1. Taiwan Chen & Chang (2010) curve projection using bone age as skeletal age (matches Taipei VGH workflow)
   const baEval = evaluateGrowthMetric(sex, boneAgeYears, examHeightCm, 'h');
   const curveProjected = projectAdultHeight(sex, baEval)?.projected ?? null;
 
@@ -421,21 +427,28 @@ export function predictHeightByBoneAge(sex, boneAgeYears, examHeightCm, chronoAg
   let baStatusText = '';
   if (Number.isFinite(chronoAgeYears)) {
     baDiff = boneAgeYears - chronoAgeYears;
-    if (baDiff >= 1.0) {
-      baStatusText = `骨齡超前 ${baDiff.toFixed(1)} 歲${baDiff >= 2 ? '（差異 ≥ 2 歲，建議內分泌評估）' : ''}`;
+    if (baDiff >= 2.0) {
+      baStatusText = `骨齡超前 ${baDiff.toFixed(1)} 歲（差異 ≥ 2 歲，建議轉介兒童內分泌科確認）`;
+    } else if (baDiff >= 1.5) {
+      baStatusText = `骨齡超前 ${baDiff.toFixed(1)} 歲（接近 1.5–2 歲警戒，建議每半年追蹤骨齡差距）`;
+    } else if (baDiff >= 1.0) {
+      baStatusText = `骨齡略超前 ${baDiff.toFixed(1)} 歲`;
+    } else if (baDiff <= -2.0) {
+      baStatusText = `骨齡落後 ${Math.abs(baDiff).toFixed(1)} 歲（差異 ≥ 2 歲，建議內分泌評估）`;
     } else if (baDiff <= -1.0) {
-      baStatusText = `骨齡落後 ${Math.abs(baDiff).toFixed(1)} 歲${baDiff <= -2 ? '（差異 ≥ 2 歲，建議內分泌評估）' : ''}`;
+      baStatusText = `骨齡落後 ${Math.abs(baDiff).toFixed(1)} 歲`;
     } else {
       baStatusText = `骨齡與實際年齡相符（差 ${baDiff >= 0 ? '+' : ''}${baDiff.toFixed(1)} 歲）`;
     }
   }
 
   return {
-    bpProjected,
     curveProjected,
-    primaryProjected: bpProjected ?? curveProjected,
+    bpProjected,
+    primaryProjected: curveProjected ?? bpProjected,
     maturePct,
     baPercentile: baEval?.percentile ?? null,
+    baBand: baEval?.band ?? null,
     baDiff,
     baStatusText
   };
