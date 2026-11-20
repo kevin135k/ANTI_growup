@@ -19,13 +19,17 @@ const TAB_TITLES = {
   'sga-newborn': '新生兒 SGA / 胎齡評估',
   'dev-screen': '兒童發展評估篩檢',
   'ref-tables': '台灣身高體重與 BMI 對照表',
-  'quick-ref': '兒科門診速查參考'
+  'quick-ref': '兒科門診速查參考',
+  'tcm-notes': '中藥用藥輔助摘要',
+  'chart-gallery': '圖表圖片一覽'
 };
 
 const state = {
   sex: 'girl',
   activeTab: 'height-predict',
   chartMetric: 'h',
+  isChartFullscreen: false,
+  isLightboxOpen: false,
   scaleIndex: 2, // 1.0 (100%)
   birthdayParsed: null,
   ageInfo: null,
@@ -232,17 +236,17 @@ function recalculateAll() {
     $('projectedHeightSub').textContent = '請輸入生日與目前身高';
   }
 
-  // Bone age result box
+  // Bone age result box (Taiwan curve bone-age channel primary + Bayley-Pinneau cross-check)
   const baBox = $('boneAgeResultBox');
   if (boneAgePred && boneAgePred.primaryProjected) {
     baBox.style.display = 'block';
     $('boneAgePredVal').innerHTML = `${boneAgePred.primaryProjected.toFixed(1)}<span class="pred-unit">cm</span>`;
     const parts = [];
+    if (boneAgePred.curveProjected) {
+      parts.push(`台灣骨齡曲線推估（北榮常模）：${boneAgePred.curveProjected.toFixed(1)} cm（骨齡對照 PR ${boneAgePred.baPercentile.toFixed(1)}）`);
+    }
     if (boneAgePred.bpProjected) {
       parts.push(`Bayley-Pinneau 比例法：${boneAgePred.bpProjected.toFixed(1)} cm（成熟度 ${boneAgePred.maturePct.toFixed(1)}%）`);
-    }
-    if (boneAgePred.curveProjected) {
-      parts.push(`台灣骨齡曲線推估：${boneAgePred.curveProjected.toFixed(1)} cm`);
     }
     if (boneAgePred.baStatusText) {
       parts.push(boneAgePred.baStatusText);
@@ -278,7 +282,7 @@ function recalculateAll() {
     noteEl.style.display = 'none';
   }
 
-  // 3. Update Height / Weight / BMI / HC Metric Cards
+  // 3. Update Height / Weight / BMI / HC / SGA Metric Cards
   renderMetricCard({
     evalObj: hEval,
     valId: 'heightPRVal',
@@ -332,8 +336,26 @@ function recalculateAll() {
     hcCard.style.display = 'none';
   }
 
+  // Optional Birth Weight SGA/AGA/LGA Card on Page 1 (synced with Tab 2)
+  const sgaEval =
+    state.sgaGA && state.sgaWeightG
+      ? evaluateBirthWeight(state.sex, state.sgaPlurality, state.sgaGA, state.sgaWeightG)
+      : null;
+  const sgaCard = $('sgaMetricCard');
+  if (sgaEval && !sgaEval.error) {
+    sgaCard.style.display = 'block';
+    $('mainSgaVal').textContent = sgaEval.code;
+    $('mainSgaMeta').textContent = `${sgaEval.week}週（P10–P90：${sgaEval.p10}–${sgaEval.p90} g）`;
+    const msBadge = $('mainSgaBadge');
+    msBadge.style.display = 'inline-flex';
+    msBadge.className = `badge ${sgaEval.status}`;
+    msBadge.textContent = sgaEval.code === 'SGA' ? '小於胎齡' : sgaEval.code === 'LGA' ? '大於胎齡' : '適於胎齡';
+  } else {
+    sgaCard.style.display = 'none';
+  }
+
   // 4. Update persistent Drawer Summary & Render Growth Charts (Wide Banner + Fullscreen)
-  state._lastCalc = { effectiveAge, hEval, wEval, bmiEval, hcEval, targetH, projectedH, boneAgePred };
+  state._lastCalc = { effectiveAge, hEval, wEval, bmiEval, hcEval, sgaEval, targetH, projectedH, boneAgePred };
   renderDrawerSummary();
   renderCharts();
 
@@ -773,6 +795,11 @@ async function copySummary() {
       `骨齡預測成年身高：${c.boneAgePred.primaryProjected.toFixed(1)} cm（${c.boneAgePred.baStatusText || '骨齡評估'}）`
     );
   }
+  if (c.sgaEval && !c.sgaEval.error) {
+    lines.push(
+      `出生體重胎齡評估：${c.sgaEval.title}（${c.sgaEval.week} 週 / ${state.sgaWeightG} g）`
+    );
+  }
 
   const text = lines.join('\n');
   try {
@@ -790,13 +817,38 @@ async function copySummary() {
 }
 
 /* ==========================================================================
+   Gallery Image Lightbox (Page 7)
+   ========================================================================== */
+function openImageLightbox(src, title) {
+  state.isLightboxOpen = true;
+  $('lightboxImg').src = src;
+  $('lightboxImg').alt = title || '圖表檢視';
+  $('lightboxTitle').textContent = title || '圖表全螢幕檢視';
+  const modal = $('imageLightboxModal');
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('fs-open');
+}
+
+function closeImageLightbox() {
+  if (!state.isLightboxOpen) return;
+  state.isLightboxOpen = false;
+  const modal = $('imageLightboxModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  if (!state.isChartFullscreen) {
+    document.body.classList.remove('fs-open');
+  }
+}
+
+/* ==========================================================================
    Reset All Inputs
    ========================================================================== */
 function resetAll() {
   [
     'birthdayText', 'birthdayCalendar', 'childHeight', 'childWeight',
     'fatherHeight', 'motherHeight', 'boneAgeYears', 'boneAgeMonths',
-    'boneAgeHeight', 'childHC', 'pretermGA', 'sgaGA', 'sgaWeight'
+    'boneAgeHeight', 'childHC', 'pretermGA', 'mainBirthWeight', 'sgaGA', 'sgaWeight'
   ].forEach((id) => {
     const el = $(id);
     if (el) el.value = '';
@@ -831,7 +883,9 @@ function bindEvents() {
   $('drawerBackdrop').addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (state.isChartFullscreen) {
+      if (state.isLightboxOpen) {
+        closeImageLightbox();
+      } else if (state.isChartFullscreen) {
         closeChartFullscreen();
       } else {
         closeDrawer();
@@ -917,9 +971,21 @@ function bindEvents() {
   bindNum('boneAgeHeight', 'boneAgeH');
   bindNum('childHC', 'hcCm');
   bindNum('pretermGA', 'pretermGA', () => {
+    state.sgaGA = state.pretermGA;
+    $('sgaGA').value = state.pretermGA !== null ? String(state.pretermGA) : '';
     if (state.birthdayParsed) {
       state.ageInfo = calculateAge(state.birthdayParsed.date, new Date(), state.pretermGA);
     }
+  });
+  bindNum('mainBirthWeight', 'sgaWeightG', () => {
+    $('sgaWeight').value = state.sgaWeightG !== null ? String(state.sgaWeightG) : '';
+  });
+  $('mainPlurality').addEventListener('change', (e) => {
+    state.sgaPlurality = e.target.value;
+    document.querySelectorAll('#pluralitySwitch .pill-btn').forEach((b) =>
+      b.classList.toggle('active', b.dataset.plurality === state.sgaPlurality)
+    );
+    recalculateAll();
   });
 
   // Collapsible advanced section
@@ -945,6 +1011,19 @@ function bindEvents() {
   $('chartFullscreenBtn').addEventListener('click', openChartFullscreen);
   $('chartFullscreenCloseBtn').addEventListener('click', closeChartFullscreen);
 
+  // Page 7 Gallery Lightbox open / close
+  document.querySelectorAll('.gallery-img-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      openImageLightbox(btn.dataset.lightboxSrc, btn.dataset.lightboxTitle);
+    });
+  });
+  $('imageLightboxCloseBtn').addEventListener('click', closeImageLightbox);
+  $('imageLightboxModal').addEventListener('click', (e) => {
+    if (e.target === $('imageLightboxModal') || e.target.classList.contains('lightbox-body')) {
+      closeImageLightbox();
+    }
+  });
+
   let resizeTimer = null;
   const handleViewportChange = () => {
     clearTimeout(resizeTimer);
@@ -960,32 +1039,32 @@ function bindEvents() {
     }
   });
 
-  // SGA Tab
+  // SGA Tab (synced with Page 1 advanced section)
   document.querySelectorAll('#pluralitySwitch .pill-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.sgaPlurality = btn.dataset.plurality;
+      $('mainPlurality').value = state.sgaPlurality;
       document.querySelectorAll('#pluralitySwitch .pill-btn').forEach((b) =>
         b.classList.toggle('active', b === btn)
       );
-      renderSGA();
+      recalculateAll();
     });
   });
   $('sgaGA').addEventListener('input', (e) => {
     const v = parseFloat(e.target.value);
     state.sgaGA = Number.isFinite(v) ? v : null;
-    if (state.sgaGA && state.sgaGA < 37) {
-      state.pretermGA = state.sgaGA;
-      $('pretermGA').value = String(state.sgaGA);
-      if (state.birthdayParsed) {
-        state.ageInfo = calculateAge(state.birthdayParsed.date, new Date(), state.pretermGA);
-      }
+    state.pretermGA = state.sgaGA;
+    $('pretermGA').value = state.sgaGA !== null ? String(state.sgaGA) : '';
+    if (state.birthdayParsed) {
+      state.ageInfo = calculateAge(state.birthdayParsed.date, new Date(), state.pretermGA);
     }
-    renderSGA();
+    recalculateAll();
   });
   $('sgaWeight').addEventListener('input', (e) => {
     const v = parseFloat(e.target.value);
     state.sgaWeightG = Number.isFinite(v) ? v : null;
-    renderSGA();
+    $('mainBirthWeight').value = state.sgaWeightG !== null ? String(state.sgaWeightG) : '';
+    recalculateAll();
   });
 
   // Development Screening Tab
